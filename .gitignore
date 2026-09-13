@@ -1,0 +1,28 @@
+# Build trees
+/build/
+/build-*/
+/out/
+/install/
+/prefix/
+/_fresh/
+/.vs/
+/.vscode/
+*.user
+CMakeUserPresets.json
+compile_commands.json
+
+# Runtime debris
+*.log
+*.tmp
+*.dmp
+*.pdb
+*.ilk
+*.exe
+*.obj
+*.lib
+*.exp
+
+# Test / runtime state
+/state/
+*.cobs
+test-state-*.bin
