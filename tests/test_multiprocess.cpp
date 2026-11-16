@@ -120,7 +120,7 @@ bool launch_publisher(const Cluster& cluster, const std::string& name,
   if (!out->process.running) {
     return false;
   }
-  if (!cotest::wait_for_file(ready_file)) {
+  if (!cotest::wait_for_file_or_exit(ready_file, out->process)) {
     cotest::ensure_terminated(out->process);
     return false;
   }
@@ -217,6 +217,10 @@ CO_TEST(multiprocess_publisher_death_and_reincarnation) {
       !launch_publisher(cluster, "pub.remote.a", first.boot.value(),
                         "PING_PONG", 4, 0.0, &replay);
   CO_CHECK(replay_rejected);
+  // The publisher exits with 3 when its registration is refused; anything else
+  // (a crash, or still running) is not a rejection.
+  CO_CHECK(!replay.process.running);
+  CO_CHECK_EQ(replay.process.exit_code, 3);
   if (replay.process.running) {
     cotest::ensure_terminated(replay.process);
   }

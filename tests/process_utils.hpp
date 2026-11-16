@@ -206,6 +206,26 @@ inline bool wait_for_file(const fs::path& path, unsigned long attempts = 600,
   return false;
 }
 
+/// Waits until \p path exists or \p child has exited, whichever comes first.  A
+/// child that exits without producing the file refused to start (for example a
+/// rejected registration); the caller sees that at once, with the child's exit
+/// code, instead of after the whole readiness bound.
+inline bool wait_for_file_or_exit(const fs::path& path, ChildProcess& child,
+                                  unsigned long attempts = 600,
+                                  unsigned long sleep_milliseconds = 100) {
+  std::error_code ignored;
+  for (unsigned long attempt = 0; attempt < attempts; ++attempt) {
+    if (fs::exists(path, ignored)) {
+      return true;
+    }
+    if (wait_process(child, 0)) {
+      return fs::exists(path, ignored);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(sleep_milliseconds));
+  }
+  return false;
+}
+
 inline std::string read_text_file(const fs::path& path) {
   std::FILE* file = nullptr;
 #if defined(_WIN32)

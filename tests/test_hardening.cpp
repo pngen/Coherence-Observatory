@@ -391,3 +391,25 @@ CO_TEST(hardening_repeated_persistence_cycles_are_stable) {
 }
 
 }  // namespace
+
+CO_TEST(hardening_second_coordinator_cannot_take_a_listening_port) {
+  CoordinatorOptions first_options;
+  first_options.bind_host = "127.0.0.1";
+  first_options.port = 0;
+  first_options.save_on_shutdown = false;
+  first_options.load_on_start = false;
+  CoordinatorServer first(first_options);
+  CO_REQUIRE(first.start().ok());
+  CO_REQUIRE(first.port() != 0);
+
+  // Two coordinators must never share one listening port: the second start fails.
+  CoordinatorOptions second_options = first_options;
+  second_options.port = first.port();
+  CoordinatorServer second(second_options);
+  const Status started = second.start();
+  CO_CHECK(!started.ok());
+  if (started.ok()) {
+    CO_CHECK(second.stop().ok());
+  }
+  CO_CHECK(first.stop().ok());
+}
